@@ -83,9 +83,27 @@ class Otp extends BaseObject
      *
      * @throws NotSupportedException
      */
-    public function validate(string $secretKey, string $otp, int $window = NULL)
+    public function validate(string $secretKey, string $otp, ?int $window = null)
     {
-        return $this->createInstance($secretKey)->verify($otp, null, $window);
+        $instance = $this->createInstance($secretKey);
+
+        if ($this->type !== self::TOTP || $window === null) {
+            return $instance->verify($otp, null, $window);
+        }
+
+        // OTPHP 10 interpreted window as a number of 30-second TOTP periods.
+        // OTPHP 11 interprets it as seconds, so check the same periods explicitly.
+        $window = abs($window);
+        $timestamp = time();
+
+        for ($step = -$window; $step <= $window; $step++) {
+            $candidateTimestamp = $timestamp + ($step * 30);
+            if ($candidateTimestamp >= 0 && $instance->verify($otp, $candidateTimestamp, 0)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -125,7 +143,15 @@ class Otp extends BaseObject
         $secretKey = Base32::encodeUpper($secretKey);
 
         if ($this->type === self::TOTP) {
-            return TOTP::create($secretKey, 30, $this->digest, $this->digits);
+            $clock = new class implements \Psr\Clock\ClockInterface
+            {
+                public function now(): \DateTimeImmutable
+                {
+                    return new \DateTimeImmutable();
+                }
+            };
+
+            return TOTP::create($secretKey, 30, $this->digest, $this->digits, clock: $clock);
         } elseif ($this->type === self::HOTP) {
             return HOTP::create($secretKey, 0, $this->digest, $this->digits);
         } else {

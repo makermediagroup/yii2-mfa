@@ -24,6 +24,6 @@ interface IdentityInterface extends BaseIdentityInterface
      *
      * @return string|null
      */
-    public function getMfaSecretKey(int $auth_type = null);
+    public function getMfaSecretKey(?int $auth_type = null);
 
 }

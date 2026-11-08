@@ -271,7 +271,7 @@ class Behavior extends BaseBehavior
      * @throws \yii\base\InvalidConfigException
      * @throws \yii\base\NotSupportedException
      */
-    public function generateOtpByIdentityLoggedIn(int $auth_method = null)
+    public function generateOtpByIdentityLoggedIn(?int $auth_method = null)
     {
         $data = $this->getIdentityLoggedIn();
 
@@ -300,7 +300,7 @@ class Behavior extends BaseBehavior
      * @throws \yii\base\InvalidConfigException
      * @throws \yii\base\NotSupportedException
      */
-    public function validateOtpByIdentityLoggedIn(string $otp, int $window = null, int $auth_method = null)
+    public function validateOtpByIdentityLoggedIn(string $otp, ?int $window = null, ?int $auth_method = null)
     {
         $data = $this->getIdentityLoggedIn();
 
